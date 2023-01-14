@@ -1,0 +1,14 @@
+{
+  "name": "orbe",
+  "packageManager": "yarn@3.3.1",
+  "private": true,
+  "workspaces": [
+    "orbe-common",
+    "orbe-front",
+    "orbe-back"
+  ],
+  "scripts": {
+    "back": "yarn workspace orbe-back tsstart",
+    "front": "yarn workspace orbe-front start"
+  }
+}
