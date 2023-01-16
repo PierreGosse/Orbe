@@ -1,7 +1,7 @@
 <script>
   export let name;
   import { test } from "./srv/test.ts";
-
+  import Comp1 from "./cmps/comp1.svelte";
   test();
 </script>
 
@@ -11,6 +11,7 @@
     Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
     how to build Svelte apps.
   </p>
+  <Comp1></Comp1>
 </main>
 
 <style>
