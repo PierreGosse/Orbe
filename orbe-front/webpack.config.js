@@ -1,7 +1,7 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require("path");
 const svelte = require('svelte');
-const autoPreprocess =require('svelte-preprocess');
+const autoPreprocess = require('svelte-preprocess');
 
 console.log(process.env.NODE_ENV)
 const mode = process.env.NODE_ENV || "development";
@@ -15,7 +15,7 @@ module.exports = {
     alias: {
       svelte: path.resolve("../node_modules", "svelte")
     },
-    extensions: [".mjs", ".js", ".svelte"],
+    extensions: [".mjs", ".js", ".ts", ".svelte"],
     mainFields: ["svelte", "browser", "module", "main"]
   },
   output: {
@@ -26,6 +26,10 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /src\/imgs\/.*svg$/i,
+        use: 'raw-loader',
+      },
+      {
         test: /\.svelte$/,
         use: {
           loader: "svelte-loader",
@@ -35,6 +39,11 @@ module.exports = {
             preprocess: autoPreprocess()
           }
         }
+      },
+      {
+        test: /\.ts?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
       },
       {
         test: /\.css$/,

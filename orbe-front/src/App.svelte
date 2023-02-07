@@ -1,37 +1,48 @@
 <script>
-  export let name;
-  import { test } from "./srv/test.ts";
-  import Comp1 from "./cmps/comp1.svelte";
-  test();
+  import Struct from "./cmps/struct.svelte";
+  import Page from "./cmps/page.svelte";
+
+  function toto(id,evt){
+    console.log(id,evt.target)
+  }
 </script>
 
 <main>
-  <h1>Hello {name}!</h1>
-  <p>
-    Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
-    how to build Svelte apps.
-  </p>
-  <Comp1></Comp1>
+  <div id="struct"><Struct /></div>
+  <div id="page"><Page /></div>
 </main>
 
 <style>
   main {
+    /* display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 10px;*/
     text-align: center;
     padding: 1em;
     max-width: 240px;
     margin: 0 auto;
-  }
-
-  h1 {
-    color: #ff3e00;
-    text-transform: uppercase;
-    font-size: 4em;
-    font-weight: 100;
+    height: 100%;
   }
 
   @media (min-width: 640px) {
     main {
       max-width: none;
     }
+  }
+
+  #struct {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+
+    /*  grid-column: 1;*/
+  }
+  #page {
+    margin-left: 205px;
+  }
+  :global(.btnsvg) {
+    fill: rgb(255, 195, 128);
+    stroke: rgb(255, 195, 128);
   }
 </style>

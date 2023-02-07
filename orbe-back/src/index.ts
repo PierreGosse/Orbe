@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { GitClient } from './srv/git';
 import { login, Auth } from './srv/auth';
 import { Struct } from './routes/structure';
+import { Page } from './routes/page';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 
 app.use('/struct',Struct)
+app.use('/page',Page)
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Express + TypeScript Server');
