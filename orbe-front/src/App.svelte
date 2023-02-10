@@ -1,17 +1,24 @@
 <script>
   import Struct from "./cmps/struct.svelte";
   import Page from "./cmps/page.svelte";
-    import Test from "./pages/test.svelte";
+  import { onMount } from "svelte";
+  import { INDEX } from "./objs/keyIndex";
+  import { Index } from "./srv/files";
 
-  function toto(id,evt){
-    console.log(id,evt.target)
+  function toto(id, evt) {
+    console.log(id, evt.target);
   }
+  onMount(() => {
+    Index.getRules().then((rules) => {
+      INDEX.load(rules);
+      console.log(INDEX.getIndex())
+    });
+  });
 </script>
 
 <main>
   <div id="struct"><Struct /></div>
   <div id="page"><Page /></div>
-  <Test/>
 </main>
 
 <style>
@@ -46,5 +53,8 @@
   :global(.btnsvg) {
     fill: rgb(255, 195, 128);
     stroke: rgb(255, 195, 128);
+  }
+  :global(.lnk){
+    cursor:pointer
   }
 </style>

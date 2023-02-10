@@ -1,4 +1,4 @@
-import type { IStructure, IPage } from 'orbe-common'
+import type { IStructure, IPage, IIndexRule } from 'orbe-common'
 
 const URL = '/api'
 
@@ -42,7 +42,7 @@ export const Struct = {
   },
 
   listPages: async (name: string): Promise<string[]> => {
-    const resp = await window.fetch(URL+"/struct/list",{
+    const resp = await window.fetch(URL + "/struct/list", {
       method: 'POST',
       headers: {
         'content-type': 'application/json;charset=UTF-8',
@@ -80,5 +80,18 @@ export const Page = {
     const pg = await resp.json()
     console.log(pg)
     return pg
+  }
+}
+export const Index = {
+  getRules: async () => {
+    const resp = await window.fetch(URL + "/index/", {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json;charset=UTF-8',
+      },
+    })
+    const pg = await resp.json()
+    console.log('rules',pg)
+    return pg as IIndexRule[]
   }
 }

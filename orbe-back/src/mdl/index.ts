@@ -3,10 +3,10 @@ import { Files } from "../srv/files"
 
 export class Index {
   index: any = {}
-  serialize(): string {
-    let ret = ""
+  serialize(): string[] {
+    let ret = []
     for (const k in this.index)
-      ret += k + "\t" + this.index[k] + "\n"
+      ret.push(k + "\t" + this.index[k])
     return ret
   }
   addEntry(key: string, path: string) {
@@ -28,8 +28,9 @@ export class Index {
     }
     return ret
   }
-  static replace(link: string, oldKeys: string[], newKeys: string[]) {
-    const index = this.parse(Files.getInstance().readIndex())
+  /*static replace(link: string, oldKeys: string[], newKeys: string[]) {
+    const index = this.parse(Files.getInstance().readRules())
+    console.log('before',index)
     const dkeys = [];
     for (const l of oldKeys) {
       dkeys.push(l.replace(/\s+/g, ' ').trim())
@@ -44,5 +45,7 @@ export class Index {
     for (const k of dkeys) {
       delete index.index[k]
     }
-  }
+    console.log('after',index)
+  //  Files.getInstance().writeRules(index.serialize())
+  }*/
 }

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.KeyIndex = void 0;
+exports.KeyIndex = exports.KEYINDEXREG = void 0;
+exports.KEYINDEXREG = /(?<ok>[a-zA-Z\u00C0-\u024F0-9]+)|(?<ko>[^\sa-zA-Z\u00C0-\u024F0-9]+)/g;
 class KeyIndex {
     constructor() {
         this.index = { next: {} };
@@ -14,11 +15,27 @@ class KeyIndex {
         }
         return cur;
     }
+    loadRule(sreg) {
+        let cur = this.findNode(sreg.keys);
+        cur.res = sreg.link;
+    }
     load(rules) {
-        for (const sreg of rules) {
-            let cur = this.findNode(sreg.keys);
-            cur.res = sreg.link;
+        for (const sreg of rules)
+            this.loadRule(sreg);
+    }
+    serialize() {
+        const resp = [];
+        this.addLevel(resp, this.index, []);
+        return resp;
+    }
+    addLevel(resp, cur, path) {
+        console.log('addLevel', resp, cur, path);
+        if (cur.res)
+            resp.push({ link: cur.res, keys: path });
+        for (const n in cur.next) {
+            this.addLevel(resp, cur.next[n], [...path, n]);
         }
+        console.log('out', resp);
     }
     replace(link, oldKeys, newKeys) {
         for (const oK of oldKeys) {
@@ -31,22 +48,22 @@ class KeyIndex {
         }
     }
     parse(str) {
-        const reg = /(?<ok>[a-zA-Z\u00C0-\u024F0-9]+)|(?<ko>[^\sa-zA-Z\u00C0-\u024F0-9]+)/g;
         let rs;
         let resp = [];
         let parsing = [];
-        while ((rs = reg.exec(str)) != null) {
+        while ((rs = exports.KEYINDEXREG.exec(str)) != null) {
             let newPars = [];
-            if (rs.groups['ok'])
+            if (rs.groups['ok']) {
                 for (const p of parsing) {
                     if (p.next[rs[0]])
                         newPars.push(Object.assign({ offset: p.offset, end: rs.index + rs[0].length }, p.next[rs[0]]));
                 }
-            if (this.index.next[rs[0]])
-                newPars.push(Object.assign({ offset: rs.index, end: rs.index + rs[0].length }, this.index.next[rs[0]]));
-            for (const np of newPars)
-                if (np.res)
-                    resp.push({ offset: np.offset, end: np.end, link: np.res });
+                if (this.index.next[rs[0]])
+                    newPars.push(Object.assign({ offset: rs.index, end: rs.index + rs[0].length }, this.index.next[rs[0]]));
+                for (const np of newPars)
+                    if (np.res)
+                        resp.push({ offset: np.offset, end: np.end, link: np.res });
+            }
             parsing = newPars;
         }
         return resp;

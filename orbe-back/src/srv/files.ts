@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { IStructure, IPage, IPara } from 'orbe-common'
+import { IIndexRule } from 'orbe-common'
 
 export class Files {
   static instance: Files
@@ -69,7 +70,6 @@ export class Files {
     return resp
   }
   getPage(type: string, name: string): IPage {
-    console.log("getPage", type, name)
     const str = this.getContent(type, name)
     const res: IPage = {
       type,
@@ -81,14 +81,12 @@ export class Files {
       const tstr = str.split('\r\n')
       let state = 0
       for (const l of tstr) {
-        console.log(l, state)
         switch (state) {
           case 0:
             if (l.startsWith('\0'))
               state = getState(l)
             else {
               const idx = l.indexOf('\b')
-              console.log(idx)
               res.content.push({
                 style: idx > 0 ? l.slice(0, idx) : "",
                 para: idx > 0 ? l.slice(idx + 1) : l
@@ -102,7 +100,6 @@ export class Files {
         }
       }
     }
-    console.log(res)
     return res
   }
   savePage(page: IPage) {
@@ -138,6 +135,28 @@ export class Files {
   writeIndex(index: string[]) {
     const ipath = path.join(this.contentpath, "index.json")
     fs.writeFileSync(ipath, index.join('\n'))
+  }
+  readRules(): IIndexRule[] {
+    const ipath = path.join(this.indexpath, "index.idx")
+    console.log(ipath)
+    if (!fs.existsSync(ipath))
+      return []
+    else
+      return fs.readFileSync(ipath).toString()
+        .split('\n').filter(l => l.indexOf('\t') > 0).map(r => {
+          const l = r.split('\t')
+          console.log(l)
+          return {
+            keys: l[0].split(' '),
+            link: l[1]
+          }
+        })
+  }
+  writeRules(rules: IIndexRule[]) {
+    const ipath = path.join(this.indexpath, "index.idx")
+    fs.writeFileSync(ipath, rules.map(r => {
+      return r.keys.join(' ') + '\t' + r.link
+    }).join('\n'))
   }
 }
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { IPage, IPara } from "orbe-common";
+  import { IPage, IPara, KEYINDEXREG } from "orbe-common";
   import { Page } from "../srv/files";
   import Btn from "./btn.svelte";
   import ok from "../imgs/ok.svg";
@@ -8,8 +8,11 @@
   import save from "../imgs/save.svg";
   import delbin from "../imgs/delete.svg";
   import edit from "../imgs/edit.svg";
+  import { INDEX } from "../objs/keyIndex";
 
+  let divedit;
   let editKeys = false;
+  let oldKeys: string[];
   let curPage: IPage | undefined;
   let initialTitle: string;
   let content: string = "";
@@ -23,7 +26,32 @@
         content = p.content
           .map((p: IPara) => {
             const style = p.style ? p.style : "p";
-            return `<${style}>${p.para.replaceAll("\n", "<br>")}</${style}>`;
+            return `<${style}>${p.para
+              .split("\n")
+              .map((p) => {
+                const idx = INDEX.parse(p);
+                if (idx.length == 0) return p;
+                else {
+                  idx.sort((a, b) => {
+                    if (a.offset == b.offset) return b.end - a.end;
+                    return a.offset - b.offset;
+                  });
+                  let str = "";
+                  let last = 0;
+                  for (const i of idx) {
+                    if (i.offset < last) continue; //ignore overlap
+                    if (i.offset > last) str += p.substring(last, i.offset);
+                    str +=
+                      `<b class='lnk' ref='${i.link}'>` +
+                      p.substring(i.offset, i.end) +
+                      "</b>";
+                    last = i.end;
+                  }
+                  if (last < p.length) str += p.substring(last);
+                  return str;
+                }
+              })
+              .join("<br/>")}</${style}>`;
           })
           .join("\n");
         initialTitle = curPage.name;
@@ -40,6 +68,8 @@
       content = "";
       dirty = false;
     }
+    oldKeys = curPage ? curPage.keys.map((s) => s) : [];
+    console.log(INDEX.getIndex());
   }
   let dirty = false;
   function onChange() {
@@ -58,6 +88,7 @@
   }
   onMount(() => {
     window.addEventListener("openPage", openPage);
+    window.addEventListener("click", follow);
   });
   onDestroy(() => {
     window.removeEventListener("openPage", openPage);
@@ -67,6 +98,7 @@
     const paras = content
       .replaceAll("\n", "")
       .replaceAll(/\<br\/?\>/gi, "\n")
+      .replaceAll(/\<\/?g[^\>]+/g, "")
       .match(
         /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
       )
@@ -90,10 +122,16 @@
           /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
         )
     );
+    INDEX.replace(
+      curPage.type + "/" + curPage.name,
+      oldKeys.map((k) => k.split(" ")),
+      curPage.keys.map((k) => k.split(" "))
+    );
+    oldKeys = curPage.keys.map((s) => s);
     if (curPage.name) {
       Page.save(curPage).then(() => {
-        dirty = false
-        console.log(id, evt)
+        dirty = false;
+        console.log(id, evt);
       });
     }
   }
@@ -122,13 +160,31 @@
         /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
       )
       .map((l) => {
+        console.log("1", l);
         const m = l.match(
           /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/i
         );
         return (m.groups.precont ? m.groups.precont : "") + m.groups.content;
+      })
+      .map((l) => {
+        console.log("2", l);
+        let m;
+        let resp = [];
+        while ((m = KEYINDEXREG.exec(l)) != null) {
+          console.log(m);
+          if (m.groups.ok) resp.push(m[0]);
+        }
+        return resp.join(" ");
       });
-    curPage.keys = [];
-    for (const k of kk) if (k > "") curPage.keys.push(k);
+    curPage.keys = kk.filter((d) => d > "");
+  }
+
+  function follow(evt) {
+    if (divedit && divedit.contains(evt.target) && evt.target.attributes.ref) {
+      console.log(evt.target.attributes.ref.value);
+      const ll = evt.target.attributes.ref.value.split("/");
+      if (ll.length == 2) openPage({ detail: { type: ll[0], page: ll[1] } });
+    }
   }
 </script>
 
@@ -167,7 +223,12 @@
       {/if}
     </div>
     <br />
-    <div contenteditable="true" on:input={onChange} bind:innerHTML={content} />
+    <div
+      contenteditable="true"
+      on:input={onChange}
+      bind:innerHTML={content}
+      bind:this={divedit}
+    />
     {#if dirty}
       <Btn action={doSave} img={save} cls="btnsvg cmd" />
     {/if}

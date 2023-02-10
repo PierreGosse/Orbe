@@ -16,3 +16,4 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./interfaces/structure"), exports);
 __exportStar(require("./interfaces/page"), exports);
+__exportStar(require("./lib/keyIndex"), exports);

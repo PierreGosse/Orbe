@@ -5,6 +5,7 @@ import { GitClient } from './srv/git';
 import { login, Auth } from './srv/auth';
 import { Struct } from './routes/structure';
 import { Page } from './routes/page';
+import { KeyIndex } from './routes/keyindex';
 
 dotenv.config();
 
@@ -13,8 +14,9 @@ const port = process.env.PORT;
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
 
-app.use('/struct',Struct)
-app.use('/page',Page)
+app.use('/struct', Struct)
+app.use('/page', Page)
+app.use('/index', KeyIndex)
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Express + TypeScript Server');

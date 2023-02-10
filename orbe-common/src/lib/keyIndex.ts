@@ -15,6 +15,9 @@ export interface IParseResult {
   end: number
   link: string
 }
+
+export const KEYINDEXREG = /(?<ok>[a-zA-Z\u00C0-\u024F0-9]+)|(?<ko>[^\sa-zA-Z\u00C0-\u024F0-9]+)/g
+
 export class KeyIndex {
   index: IIndexNode = { next: {} }
   findNode(keys: string[]): IIndexNode {
@@ -26,11 +29,26 @@ export class KeyIndex {
     }
     return cur
   }
+  loadRule(sreg: IIndexRule) {
+    let cur = this.findNode(sreg.keys)
+    cur.res = sreg.link
+  }
   load(rules: IIndexRule[]) {
-    for (const sreg of rules) {
-      let cur = this.findNode(sreg.keys)
-      cur.res = sreg.link
+    for (const sreg of rules) this.loadRule(sreg)
+  }
+  serialize(): IIndexRule[] {
+    const resp: IIndexRule[] = []
+    this.addLevel(resp, this.index, [])
+    return resp
+  }
+  addLevel(resp: IIndexRule[], cur: IIndexNode, path: string[]) {
+    console.log('addLevel', resp, cur, path)
+    if (cur.res)
+      resp.push({ link: cur.res, keys: path })
+    for (const n in cur.next) {
+      this.addLevel(resp, cur.next[n], [...path, n])
     }
+    console.log('out',resp)
   }
   replace(link: string, oldKeys: string[][], newKeys: string[][]) {
     for (const oK of oldKeys) {
@@ -43,22 +61,22 @@ export class KeyIndex {
     }
   }
   parse(str: string) {
-    const reg = /(?<ok>[a-zA-Z\u00C0-\u024F0-9]+)|(?<ko>[^\sa-zA-Z\u00C0-\u024F0-9]+)/g
     let rs;
     let resp: IParseResult[] = []
     let parsing: IParseNode[] = []
-    while ((rs = reg.exec(str)) != null) {
+    while ((rs = KEYINDEXREG.exec(str)) != null) {
       let newPars: IParseNode[] = []
-      if(rs.groups!['ok'])
-      for (const p of parsing) {
-        if (p.next[rs[0]])
-          newPars.push({ offset: p.offset, end: rs.index + rs[0].length, ...p.next[rs[0]] })
+      if (rs.groups!['ok']) {
+        for (const p of parsing) {
+          if (p.next[rs[0]])
+            newPars.push({ offset: p.offset, end: rs.index + rs[0].length, ...p.next[rs[0]] })
+        }
+        if (this.index.next[rs[0]])
+          newPars.push({ offset: rs.index, end: rs.index + rs[0].length, ...this.index.next[rs[0]] })
+        for (const np of newPars)
+          if (np.res)
+            resp.push({ offset: np.offset, end: np.end, link: np.res })
       }
-      if (this.index.next[rs[0]])
-        newPars.push({ offset: rs.index, end: rs.index + rs[0].length, ...this.index.next[rs[0]] })
-      for (const np of newPars)
-        if (np.res)
-          resp.push({ offset: np.offset, end: np.end, link: np.res })
       parsing = newPars
     }
     return resp

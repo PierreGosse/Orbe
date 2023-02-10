@@ -1,9 +1,13 @@
 <script lang="ts">
-  import { KeyIndex } from "../cmps/keyIndex";
+  import { KeyIndex } from "orbe-common";
 
-  KeyIndex.load(["toto est\tlien1", "tutu\tlien2"]);
-  console.log(KeyIndex.getIndex());
-  console.log(KeyIndex.parse('toto est bô!! c15 23'))
+  const keyIndex = new KeyIndex();
+  keyIndex.load([
+    { keys: ["toto", "est"], link: "lien1" },
+    { keys: ["tutu"], link: "lien2" },
+  ]);
+  console.log(keyIndex.getIndex());
+  console.log(keyIndex.parse("toto est bô!! c15 23"));
 </script>
 
 <div />
