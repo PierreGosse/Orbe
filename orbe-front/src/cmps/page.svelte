@@ -3,6 +3,8 @@
   import { IPage, IPara } from "orbe-common";
   import { Page } from "../srv/files";
   import Btn from "./btn.svelte";
+  import ok from "../imgs/ok.svg";
+  import cancel from "../imgs/cancel.svg";
   import save from "../imgs/save.svg";
   import delbin from "../imgs/delete.svg";
   import edit from "../imgs/edit.svg";
@@ -41,7 +43,7 @@
   }
   let dirty = false;
   function onChange() {
-    console.log('onChange',content)
+    console.log("onChange", content);
     dirty = true;
   }
   function titleChange() {
@@ -89,12 +91,44 @@
         )
     );
     if (curPage.name) {
-      Page.save(curPage);
+      Page.save(curPage).then(() => {
+        dirty = false
+        console.log(id, evt)
+      });
     }
-    console.log(id, evt);
   }
   function doDelete(id, evt) {
     console.log(id, evt);
+  }
+  let edKeys;
+  function modKeys() {
+    editKeys = true;
+    edKeys = curPage.keys
+      .map((k) => {
+        return `<p>${k}</p>`;
+      })
+      .join("");
+  }
+  function cancelKeys() {
+    editKeys = false;
+  }
+  function okKeys() {
+    editKeys = false;
+    dirty = true;
+    const kk = edKeys
+      .replaceAll("\n", "")
+      .replaceAll(/\<br\/?\>/gi, "")
+      .match(
+        /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
+      )
+      .map((l) => {
+        const m = l.match(
+          /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/i
+        );
+        return (m.groups.precont ? m.groups.precont : "") + m.groups.content;
+      });
+    curPage.keys = [];
+    for (const k of kk) if (k > "") curPage.keys.push(k);
   }
 </script>
 
@@ -113,14 +147,26 @@
       <Btn action={startRename} img={edit} cls="btnsvg" />
     {/if}
     <Btn action={doDelete} img={delbin} cls="btnsvg cmd" />
-    {#if editKeys}
-      {#each curPage.keys as k}
-        <p>k</p>
-      {/each}
-      <div contenteditable="true" />
-    {:else}
-      <div>{curPage.keys.join(", ")}</div>
-    {/if}
+    <br />
+    <div id="keys">
+      mots clés
+      {#if editKeys}
+        <div contenteditable="true" bind:innerHTML={edKeys}>
+          {#each curPage.keys as k}
+            <p>{k}</p>
+          {/each}
+        </div>
+        &nbsp;
+        <span class="cmd">
+          <Btn action={cancelKeys} img={cancel} cls="btnsvg" />
+          <Btn action={okKeys} img={ok} cls="btnsvg" />
+        </span>
+      {:else}
+        <span>{curPage.keys.join(", ")}</span>
+        <Btn action={modKeys} img={edit} cls="btnsvg cmd" />
+      {/if}
+    </div>
+    <br />
     <div contenteditable="true" on:input={onChange} bind:innerHTML={content} />
     {#if dirty}
       <Btn action={doSave} img={save} cls="btnsvg cmd" />
@@ -129,6 +175,9 @@
 </div>
 
 <style>
+  #keys {
+    width: 80%;
+  }
   [contenteditable] {
     width: 100%;
     border: 1px solid orange;

@@ -81,7 +81,7 @@ export class Files {
       const tstr = str.split('\r\n')
       let state = 0
       for (const l of tstr) {
-        console.log(l,state)
+        console.log(l, state)
         switch (state) {
           case 0:
             if (l.startsWith('\0'))
@@ -91,7 +91,7 @@ export class Files {
               console.log(idx)
               res.content.push({
                 style: idx > 0 ? l.slice(0, idx) : "",
-                para: idx > 0 ? l.slice(idx+1) : l
+                para: idx > 0 ? l.slice(idx + 1) : l
               })
             }
             break;
@@ -127,6 +127,17 @@ export class Files {
     const cpath = path.join(tpath, name)
     console.log(cpath)
     fs.writeFileSync(cpath, content)
+  }
+  readIndex(): string[] {
+    const ipath = path.join(this.contentpath, "index.json")
+    if (!fs.existsSync(ipath))
+      return []
+    else
+      return fs.readFileSync(ipath).toString().split('\n')
+  }
+  writeIndex(index: string[]) {
+    const ipath = path.join(this.contentpath, "index.json")
+    fs.writeFileSync(ipath, index.join('\n'))
   }
 }
 

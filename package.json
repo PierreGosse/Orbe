@@ -8,6 +8,7 @@
     "orbe-back"
   ],
   "scripts": {
+    "common": "yarn workspace orbe-common build",
     "back": "yarn workspace orbe-back tsstart",
     "front": "yarn workspace orbe-front start"
   }

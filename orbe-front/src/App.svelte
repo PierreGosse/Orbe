@@ -1,6 +1,7 @@
 <script>
   import Struct from "./cmps/struct.svelte";
   import Page from "./cmps/page.svelte";
+    import Test from "./pages/test.svelte";
 
   function toto(id,evt){
     console.log(id,evt.target)
@@ -10,6 +11,7 @@
 <main>
   <div id="struct"><Struct /></div>
   <div id="page"><Page /></div>
+  <Test/>
 </main>
 
 <style>
