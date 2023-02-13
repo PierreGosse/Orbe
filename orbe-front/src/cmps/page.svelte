@@ -9,24 +9,21 @@
   import delbin from "../imgs/delete.svg";
   import edit from "../imgs/edit.svg";
   import { INDEX } from "../helpers/keyIndex";
-  import {
-    buildTextNode,
-    buildDivNode,
-    hasFlatChild,
-    flatten,
-  } from "../helpers/sanitize";
+  import Editor from "./Editor.svelte";
 
-  let divedit: HTMLDivElement;
+  let editor: any;
   let editKeys = false;
   let oldKeys: string[];
   let curPage: IPage | undefined;
   let initialTitle: string;
   let content: string = "";
   let renaming = false;
+
+  $: if(content) console.log('page content')
+
   function openPage(evt) {
     if (evt.detail.page) {
       Page.get(evt.detail.type, evt.detail.page).then((p: IPage) => {
-        console.log(p);
         curPage = p;
         content = p.content
           .map((p: IPara) => {
@@ -83,81 +80,6 @@
   }
   let dirty = false;
 
-  function normalizeEdit() {
-    const todo: Node[][] = [];
-    for (let i = 0; i < divedit.childNodes.length; i++) {
-      const c = divedit.childNodes[i];
-      switch (c.nodeName.toLocaleLowerCase()) {
-        case "#text":
-          const ptxt = buildTextNode(c.textContent);
-          divedit.insertBefore(ptxt, c);
-          divedit.removeChild(c);
-          break;
-        case "div":
-          if (hasFlatChild(c)) {
-            const sub = flatten(c as HTMLDivElement);
-            todo.push([c, ...sub]);
-          } else {
-            const pdiv = buildDivNode((c as HTMLDivElement).innerHTML);
-            divedit.insertBefore(pdiv, c);
-            divedit.removeChild(c);
-          }
-          break;
-      }
-      if (window.getSelection().anchorNode == divedit) {
-        window.getSelection().removeAllRanges();
-        var range = document.createRange();
-        if (divedit.hasChildNodes()) {
-          console.log(divedit.lastChild);
-          console.log(divedit.lastChild.textContent);
-          console.log(divedit.lastChild.textContent.length);
-          let cur = divedit.lastChild;
-          while (cur.nodeName != "#text" && cur.lastChild) cur = cur.lastChild;
-          range.setStart(cur, cur.textContent.length);
-        } else range.selectNode(divedit);
-        window.getSelection().addRange(range);
-      }
-    }
-    for (const td of todo) {
-      console.log(td);
-      for (let i = 1; i < td.length; i++) divedit.insertBefore(td[i], td[0]);
-      divedit.removeChild(td[0]);
-    }
-  }
-  function onChange() {
-    normalizeEdit();
-    dirty = true;
-  }
-  function onPaste(evt: ClipboardEvent) {
-    evt.preventDefault();
-    const pData = JSON.stringify(
-      evt.clipboardData.getData("text/html"),
-      null,
-      2
-    );
-    const sData = pData
-      .replace(/^"/, "")
-      .replace(/"$/, "")
-      .replace(/\\n/g, "\n")
-      .replace(/\<\!--((?!--\>).)*--\>/g, "")
-      .replace(/\<\/?(?!div|p|br|h[1-6])[a-z]\w*(\s[^\>]*)?\>/gi, "")
-      .replace(/^\s+/, "")
-      .replace(/\s+$/, "");
-
-    var el = document.createElement("div");
-    el.innerHTML = sData;
-    const sel = window.getSelection();
-    sel.deleteFromDocument();
-    const range = sel.getRangeAt(0);
-    let frag = document.createDocumentFragment();
-    let node;
-    let lastNode;
-    while ((node = el.firstChild)) {
-      lastNode = frag.appendChild(node);
-    }
-    range.insertNode(frag);
-    normalizeEdit();
-  }
   function titleChange() {
     renaming = false;
     if (initialTitle != curPage.name) dirty = true;
@@ -170,7 +92,6 @@
   }
   onMount(() => {
     window.addEventListener("openPage", openPage);
-    window.addEventListener("click", follow);
   });
   onDestroy(() => {
     window.removeEventListener("openPage", openPage);
@@ -256,15 +177,6 @@
       : [];
     curPage.keys = kk.filter((d) => d > "");
   }
-
-  function follow(evt) {
-    if (divedit && divedit.contains(evt.target) && evt.target.attributes.ref) {
-      console.log(evt.target.attributes.ref.value);
-      const vv = evt.target.attributes.ref.value.split("|");
-      const ll = vv[0].split("/");
-      if (ll.length == 2) openPage({ detail: { type: ll[0], page: ll[1] } });
-    }
-  }
 </script>
 
 <div class="main">
@@ -302,13 +214,7 @@
       {/if}
     </div>
     <br />
-    <div
-      contenteditable="true"
-      on:paste={onPaste}
-      on:input={onChange}
-      bind:innerHTML={content}
-      bind:this={divedit}
-    />
+    <Editor bind:editorEvent={editor} bind:content bind:dirty />
     <div id="foot">
       {#if dirty}
         <Btn action={doSave} img={save} cls="btnsvg cmd" />
@@ -323,11 +229,6 @@
   }
   #foot {
     min-height: 30px;
-  }
-  [contenteditable] {
-    width: 100%;
-    border: 1px solid orange;
-    padding: 5px;
   }
   .main {
     text-align: left;

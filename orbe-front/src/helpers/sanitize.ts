@@ -7,18 +7,24 @@ export function cleanHtml(input: string) {
 
 export function buildTextNode(txt: string): HTMLParagraphElement {
   const p = document.createElement("p");
-  p.innerText = txt;
+  if (txt > "")
+    p.innerText = txt;
+  else
+    p.innerHTML = '<br/>'
   return p;
 }
 export function buildDivNode(html: string): HTMLParagraphElement {
   const p = document.createElement("p");
-  p.innerHTML = html;
+  if (html > "")
+    p.innerHTML = html;
+  else
+    p.innerHTML = '<br/>'
   return p;
 }
 export function hasFlatChild(div: Node) {
   console.log("hasFlatChild", div);
   const cs = (div as HTMLDivElement).children;
-  for (let i=0; i<cs.length;i++) {
+  for (let i = 0; i < cs.length; i++) {
     if (cs[i].tagName.match(/div|p|h[1-6]/i)) return true;
   }
   return false;
