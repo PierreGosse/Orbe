@@ -148,14 +148,14 @@ export class Files {
           console.log(l)
           return {
             keys: l[0].split(' '),
-            link: l[1]
+            link: l.filter((v, i) => i > 0)
           }
         })
   }
   writeRules(rules: IIndexRule[]) {
     const ipath = path.join(this.indexpath, "index.idx")
     fs.writeFileSync(ipath, rules.map(r => {
-      return r.keys.join(' ') + '\t' + r.link
+      return r.keys.join(' ') + '\t' + r.link.join('\t')
     }).join('\n'))
   }
 }

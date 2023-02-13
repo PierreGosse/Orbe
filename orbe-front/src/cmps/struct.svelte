@@ -16,6 +16,7 @@
     const sts = await Struct.getStruct();
     console.log(sts);
     stypes = sts.types;
+    stypes.sort()
   });
 
   let isAdding = false;
@@ -29,6 +30,7 @@
     console.log(sts);
     newname = "";
     stypes = sts.types;
+    stypes.sort()
   }
   async function doAddCancel() {
     isAdding = false;
@@ -39,10 +41,12 @@
     const sts = await Struct.delStruct(vl);
     console.log(sts);
     stypes = sts.types;
+    stypes.sort()
   }
   async function doSelect(evt) {
     selType = evt.target.attributes.vt.value;
     pages = await Struct.listPages(selType);
+    pages.sort()
     hasPage = pages && pages.length > 0;
   }
   async function doOpen(evt) {

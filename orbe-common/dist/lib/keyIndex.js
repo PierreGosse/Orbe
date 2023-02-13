@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.KeyIndex = exports.KEYINDEXREG = void 0;
-exports.KEYINDEXREG = /(?<ok>[a-zA-Z\u00C0-\u024F0-9]+)|(?<ko>[^\sa-zA-Z\u00C0-\u024F0-9]+)/g;
+exports.KEYINDEXREG = /(?<ok>[a-zA-Z\u00C0-\u024F0-9\-_]+)|(?<ko>[^\sa-zA-Z\u00C0-\u024F0-9\-_]+)/g;
 class KeyIndex {
     constructor() {
         this.index = { next: {} };
@@ -38,13 +38,21 @@ class KeyIndex {
         console.log('out', resp);
     }
     replace(link, oldKeys, newKeys) {
+        var _a, _b;
         for (const oK of oldKeys) {
             let cur = this.findNode(oK);
-            delete cur.res;
+            const idx = cur.res ? cur.res.indexOf(link) : -1;
+            if (idx > -1)
+                (_a = cur.res) === null || _a === void 0 ? void 0 : _a.splice(idx, 1);
+            if (((_b = cur.res) === null || _b === void 0 ? void 0 : _b.length) == 0)
+                delete cur.res;
         }
         for (const nK of newKeys) {
             let cur = this.findNode(nK);
-            cur.res = link;
+            if (cur.res)
+                cur.res.push(link);
+            else
+                cur.res = [link];
         }
     }
     parse(str) {

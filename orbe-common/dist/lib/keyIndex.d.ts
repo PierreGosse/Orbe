@@ -1,12 +1,12 @@
 export interface IIndexRule {
     keys: string[];
-    link: string;
+    link: string[];
 }
 export interface IIndexNode {
     next: {
         [key: string]: IIndexNode;
     };
-    res?: string;
+    res?: string[];
 }
 export interface IParseNode extends IIndexNode {
     offset: number;
@@ -15,7 +15,7 @@ export interface IParseNode extends IIndexNode {
 export interface IParseResult {
     offset: number;
     end: number;
-    link: string;
+    link: string[];
 }
 export declare const KEYINDEXREG: RegExp;
 export declare class KeyIndex {

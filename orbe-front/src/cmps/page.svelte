@@ -8,9 +8,15 @@
   import save from "../imgs/save.svg";
   import delbin from "../imgs/delete.svg";
   import edit from "../imgs/edit.svg";
-  import { INDEX } from "../objs/keyIndex";
+  import { INDEX } from "../helpers/keyIndex";
+  import {
+    buildTextNode,
+    buildDivNode,
+    hasFlatChild,
+    flatten,
+  } from "../helpers/sanitize";
 
-  let divedit;
+  let divedit: HTMLDivElement;
   let editKeys = false;
   let oldKeys: string[];
   let curPage: IPage | undefined;
@@ -18,7 +24,6 @@
   let content: string = "";
   let renaming = false;
   function openPage(evt) {
-    console.log(evt.detail);
     if (evt.detail.page) {
       Page.get(evt.detail.type, evt.detail.page).then((p: IPage) => {
         console.log(p);
@@ -42,7 +47,7 @@
                     if (i.offset < last) continue; //ignore overlap
                     if (i.offset > last) str += p.substring(last, i.offset);
                     str +=
-                      `<b class='lnk' ref='${i.link}'>` +
+                      `<b class='lnk' ref='${i.link.join("|")}'>` +
                       p.substring(i.offset, i.end) +
                       "</b>";
                     last = i.end;
@@ -50,6 +55,12 @@
                   if (last < p.length) str += p.substring(last);
                   return str;
                 }
+              })
+              .map((s) => {
+                return s.replaceAll(/http\S+/g, (match) => {
+                  console.log(match);
+                  return `<a href="${match}">${match}</a>`;
+                });
               })
               .join("<br/>")}</${style}>`;
           })
@@ -69,12 +80,83 @@
       dirty = false;
     }
     oldKeys = curPage ? curPage.keys.map((s) => s) : [];
-    console.log(INDEX.getIndex());
   }
   let dirty = false;
+
+  function normalizeEdit() {
+    const todo: Node[][] = [];
+    for (let i = 0; i < divedit.childNodes.length; i++) {
+      const c = divedit.childNodes[i];
+      switch (c.nodeName.toLocaleLowerCase()) {
+        case "#text":
+          const ptxt = buildTextNode(c.textContent);
+          divedit.insertBefore(ptxt, c);
+          divedit.removeChild(c);
+          break;
+        case "div":
+          if (hasFlatChild(c)) {
+            const sub = flatten(c as HTMLDivElement);
+            todo.push([c, ...sub]);
+          } else {
+            const pdiv = buildDivNode((c as HTMLDivElement).innerHTML);
+            divedit.insertBefore(pdiv, c);
+            divedit.removeChild(c);
+          }
+          break;
+      }
+      if (window.getSelection().anchorNode == divedit) {
+        window.getSelection().removeAllRanges();
+        var range = document.createRange();
+        if (divedit.hasChildNodes()) {
+          console.log(divedit.lastChild);
+          console.log(divedit.lastChild.textContent);
+          console.log(divedit.lastChild.textContent.length);
+          let cur = divedit.lastChild;
+          while (cur.nodeName != "#text" && cur.lastChild) cur = cur.lastChild;
+          range.setStart(cur, cur.textContent.length);
+        } else range.selectNode(divedit);
+        window.getSelection().addRange(range);
+      }
+    }
+    for (const td of todo) {
+      console.log(td);
+      for (let i = 1; i < td.length; i++) divedit.insertBefore(td[i], td[0]);
+      divedit.removeChild(td[0]);
+    }
+  }
   function onChange() {
-    console.log("onChange", content);
+    normalizeEdit();
     dirty = true;
+  }
+  function onPaste(evt: ClipboardEvent) {
+    evt.preventDefault();
+    const pData = JSON.stringify(
+      evt.clipboardData.getData("text/html"),
+      null,
+      2
+    );
+    const sData = pData
+      .replace(/^"/, "")
+      .replace(/"$/, "")
+      .replace(/\\n/g, "\n")
+      .replace(/\<\!--((?!--\>).)*--\>/g, "")
+      .replace(/\<\/?(?!div|p|br|h[1-6])[a-z]\w*(\s[^\>]*)?\>/gi, "")
+      .replace(/^\s+/, "")
+      .replace(/\s+$/, "");
+
+    var el = document.createElement("div");
+    el.innerHTML = sData;
+    const sel = window.getSelection();
+    sel.deleteFromDocument();
+    const range = sel.getRangeAt(0);
+    let frag = document.createDocumentFragment();
+    let node;
+    let lastNode;
+    while ((node = el.firstChild)) {
+      lastNode = frag.appendChild(node);
+    }
+    range.insertNode(frag);
+    normalizeEdit();
   }
   function titleChange() {
     renaming = false;
@@ -98,30 +180,22 @@
     const paras = content
       .replaceAll("\n", "")
       .replaceAll(/\<br\/?\>/gi, "\n")
-      .replaceAll(/\<\/?g[^\>]+/g, "")
+      .replaceAll(/\<\/?[ba][^\>]*\>/gi, "")
       .match(
-        /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
+        /(?<precont>[^\>\<]*)(\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>)?/gi
       )
       .map((l) => {
         const m = l.match(
-          /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/i
+          /(?<precont>[^\>\<]*)(\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>)?/i
         );
         return {
           style: m.groups.tag == "div" ? "p" : m.groups.tag,
-          para: (m.groups.precont ? m.groups.precont : "") + m.groups.content,
+          para:
+            (m.groups.precont ? m.groups.precont : "") +
+            (m.groups.content ? m.groups.content : ""),
         };
       });
     curPage.content = paras;
-    console.log(
-      curPage,
-      content,
-      content
-        .replaceAll("\n", "")
-        .replaceAll(/\<br\/?\>/gi, "\n")
-        .match(
-          /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
-        )
-    );
     INDEX.replace(
       curPage.type + "/" + curPage.name,
       oldKeys.map((k) => k.split(" ")),
@@ -154,35 +228,40 @@
     editKeys = false;
     dirty = true;
     const kk = edKeys
-      .replaceAll("\n", "")
-      .replaceAll(/\<br\/?\>/gi, "")
-      .match(
-        /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
-      )
-      .map((l) => {
-        console.log("1", l);
-        const m = l.match(
-          /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/i
-        );
-        return (m.groups.precont ? m.groups.precont : "") + m.groups.content;
-      })
-      .map((l) => {
-        console.log("2", l);
-        let m;
-        let resp = [];
-        while ((m = KEYINDEXREG.exec(l)) != null) {
-          console.log(m);
-          if (m.groups.ok) resp.push(m[0]);
-        }
-        return resp.join(" ");
-      });
+      ? edKeys
+          .replaceAll("\n", "")
+          .replaceAll(/\<br\/?\>/gi, "")
+          .match(
+            /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
+          )
+          .map((l) => {
+            console.log("1", l);
+            const m = l.match(
+              /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/i
+            );
+            return (m.groups.precont ? m.groups.precont : "") + m.groups.content
+              ? m.groups.content
+              : "";
+          })
+          .map((l) => {
+            console.log("2", l);
+            let m;
+            let resp = [];
+            while ((m = KEYINDEXREG.exec(l)) != null) {
+              console.log(m);
+              if (m.groups.ok) resp.push(m[0]);
+            }
+            return resp.join(" ");
+          })
+      : [];
     curPage.keys = kk.filter((d) => d > "");
   }
 
   function follow(evt) {
     if (divedit && divedit.contains(evt.target) && evt.target.attributes.ref) {
       console.log(evt.target.attributes.ref.value);
-      const ll = evt.target.attributes.ref.value.split("/");
+      const vv = evt.target.attributes.ref.value.split("|");
+      const ll = vv[0].split("/");
       if (ll.length == 2) openPage({ detail: { type: ll[0], page: ll[1] } });
     }
   }
@@ -225,19 +304,25 @@
     <br />
     <div
       contenteditable="true"
+      on:paste={onPaste}
       on:input={onChange}
       bind:innerHTML={content}
       bind:this={divedit}
     />
-    {#if dirty}
-      <Btn action={doSave} img={save} cls="btnsvg cmd" />
-    {/if}
+    <div id="foot">
+      {#if dirty}
+        <Btn action={doSave} img={save} cls="btnsvg cmd" />
+      {/if}
+    </div>
   {/if}
 </div>
 
 <style>
   #keys {
     width: 80%;
+  }
+  #foot {
+    min-height: 30px;
   }
   [contenteditable] {
     width: 100%;

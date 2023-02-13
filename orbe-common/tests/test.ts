@@ -3,17 +3,17 @@ const keyIndex = new KeyIndex()
 const rules: IIndexRule[] = [
   {
     keys: ["toto", "est"],
-    link: "link1"
+    link: ["link1"]
   },
   {
     keys: ["145"],
-    link: "link2"
+    link: ["link2"]
   },
   {
     keys: ["toto", "est", "bô"],
-    link: "link3"
+    link: ["link3"]
   },
-  { keys: ["145", "146"], link: "link4" }
+  { keys: ["145", "146"], link: ["link4"] }
 ]
 keyIndex.load(rules)
 console.log(JSON.stringify(keyIndex.getIndex(), null, 2))
@@ -24,3 +24,12 @@ let rs;
 while ((rs = reg.exec(str)) != null)
   console.log(rs)
 
+const str2 = "aaa\tbbbb\tcccc\tddd"
+console.log(str2.split('\t'))
+
+const reg2=/\<\/?(?!div|p)[a-zA-Z]+(\s[^\>]*)?\>/gi
+
+const str3="<div><a href=''>toto</a> est <b>bo</b></div>"
+
+console.log(str3)
+console.log(str3.replace(reg2,""))

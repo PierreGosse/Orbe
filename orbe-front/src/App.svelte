@@ -2,7 +2,7 @@
   import Struct from "./cmps/struct.svelte";
   import Page from "./cmps/page.svelte";
   import { onMount } from "svelte";
-  import { INDEX } from "./objs/keyIndex";
+  import { INDEX } from "./helpers/keyIndex";
   import { Index } from "./srv/files";
 
   function toto(id, evt) {

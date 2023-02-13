@@ -1,10 +1,10 @@
 export interface IIndexRule {
   keys: string[]
-  link: string
+  link: string[]
 }
 export interface IIndexNode {
   next: { [key: string]: IIndexNode }
-  res?: string
+  res?: string[]
 }
 export interface IParseNode extends IIndexNode {
   offset: number
@@ -13,10 +13,10 @@ export interface IParseNode extends IIndexNode {
 export interface IParseResult {
   offset: number
   end: number
-  link: string
+  link: string[]
 }
 
-export const KEYINDEXREG = /(?<ok>[a-zA-Z\u00C0-\u024F0-9]+)|(?<ko>[^\sa-zA-Z\u00C0-\u024F0-9]+)/g
+export const KEYINDEXREG = /(?<ok>[a-zA-Z\u00C0-\u024F0-9\-_]+)|(?<ko>[^\sa-zA-Z\u00C0-\u024F0-9\-_]+)/g
 
 export class KeyIndex {
   index: IIndexNode = { next: {} }
@@ -48,16 +48,21 @@ export class KeyIndex {
     for (const n in cur.next) {
       this.addLevel(resp, cur.next[n], [...path, n])
     }
-    console.log('out',resp)
+    console.log('out', resp)
   }
   replace(link: string, oldKeys: string[][], newKeys: string[][]) {
     for (const oK of oldKeys) {
       let cur = this.findNode(oK)
-      delete cur.res
+      const idx = cur.res ? cur.res.indexOf(link) : -1
+      if (idx > -1)
+        cur.res?.splice(idx, 1)
+      if (cur.res?.length == 0)
+        delete cur.res
     }
     for (const nK of newKeys) {
       let cur = this.findNode(nK)
-      cur.res = link
+      if (cur.res) cur.res.push(link)
+      else cur.res = [link]
     }
   }
   parse(str: string) {
