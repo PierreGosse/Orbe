@@ -140,7 +140,6 @@
     normalizeEdit();
   }
   function stylePara(id, e) {
-    console.log(id, idSel, e);
     const old = divedit.childNodes[idSel];
     if (old.tagName != id) {
       const newTag = document.createElement(id);

@@ -1,5 +1,4 @@
 export function cleanHtml(input: string) {
-  console.log(input)
   return input.replace(/\n/g, "")
     .replace(/\<br\/?\>/gi, "\n")
     .replace(/\<\/?(?!div|p|br)[a-zA-Z]+(\s[^\>]*)?\>/gi, "")
@@ -22,7 +21,6 @@ export function buildDivNode(html: string): HTMLParagraphElement {
   return p;
 }
 export function hasFlatChild(div: Node) {
-  console.log("hasFlatChild", div);
   const cs = (div as HTMLDivElement).children;
   for (let i = 0; i < cs.length; i++) {
     if (cs[i].tagName.match(/div|p|h[1-6]/i)) return true;
@@ -30,7 +28,6 @@ export function hasFlatChild(div: Node) {
   return false;
 }
 export function flatten(div: HTMLDivElement): Node[] {
-  console.log("flatten", div);
   const resp: Node[] = [];
   for (let i = 0; i < div.childNodes.length; i++) {
     const c = div.childNodes[i];
@@ -39,6 +36,5 @@ export function flatten(div: HTMLDivElement): Node[] {
       for (const s of sub) resp.push(s);
     } else resp.push(c);
   }
-  console.log(resp);
   return resp;
 }

@@ -9,7 +9,6 @@
   export let action: () => void;
 
   function keyPress(e: KeyboardEvent) {
-    console.log(e);
     if (
       e.shiftKey == shift &&
       e.ctrlKey == ctrl &&

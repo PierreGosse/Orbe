@@ -1,29 +1,62 @@
-<script>
+<script lang="ts">
   import Struct from "./cmps/struct.svelte";
   import Page from "./cmps/page.svelte";
   import Toast from "./cmps/toast.svelte";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { INDEX } from "./helpers/keyIndex";
   import { Index } from "./srv/files";
 
-  function toto(id, evt) {
-    console.log(id, evt.target);
-  }
   onMount(() => {
     Index.getRules().then((rules) => {
       INDEX.load(rules);
-      console.log(INDEX.getIndex());
     });
+    window.addEventListener("StructLoading", startLoad);
+    window.addEventListener("StructLoadStop", stopLoad);
   });
+  onDestroy(async () => {
+    window.removeEventListener("StructLoading", startLoad);
+    window.removeEventListener("StructLoadStop", stopLoad);
+  });
+
+  let loading = false;
+  let loadTimer: any;
+
+  let divMain: HTMLElement;
+  let divCache: HTMLDivElement;
+
+  function stopLoad() {
+    loading = false;
+    divCache.style.display = "none";
+    window.clearTimeout(loadTimer);
+    loadTimer = null;
+  }
+  function startLoad() {
+    loading = true;
+    divCache.style.top = `${divMain.clientTop}px`;
+    divCache.style.left = `${divMain.clientLeft}px`;
+    divCache.style.width = `${divMain.clientWidth}px`;
+    divCache.style.height = `${divMain.clientHeight}px`;
+    divCache.style.display = "block";
+    if (loadTimer) window.clearTimeout(loadTimer);
+    loadTimer = window.setTimeout(stopLoad, 10000);
+  }
 </script>
 
-<main>
+<main bind:this={divMain}>
   <div id="struct"><Struct /></div>
   <div id="page"><Page /></div>
+  <div id="cache" bind:this={divCache}>&nbsp;</div>
   <Toast />
 </main>
 
 <style>
+  #cache {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    background-color: white;
+    opacity: 0.5;
+  }
   main {
     /* display: grid;
     grid-template-columns: repeat(2, 1fr);

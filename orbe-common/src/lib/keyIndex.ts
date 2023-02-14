@@ -42,13 +42,11 @@ export class KeyIndex {
     return resp
   }
   addLevel(resp: IIndexRule[], cur: IIndexNode, path: string[]) {
-    console.log('addLevel', resp, cur, path)
     if (cur.res)
       resp.push({ link: cur.res, keys: path })
     for (const n in cur.next) {
       this.addLevel(resp, cur.next[n], [...path, n])
     }
-    console.log('out', resp)
   }
   replace(link: string, oldKeys: string[][], newKeys: string[][]) {
     for (const oK of oldKeys) {

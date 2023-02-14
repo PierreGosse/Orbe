@@ -36,7 +36,6 @@
             /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
           )
           .map((l) => {
-            console.log("1", l);
             const m = l.match(
               /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/i
             );
@@ -45,11 +44,9 @@
               : "";
           })
           .map((l) => {
-            console.log("2", l);
             let m;
             let resp = [];
             while ((m = KEYINDEXREG.exec(l)) != null) {
-              console.log(m);
               if (m.groups.ok) resp.push(m[0]);
             }
             return resp.join(" ");

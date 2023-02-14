@@ -11,7 +11,6 @@ export const Struct = {
       },
     })
     const tps = await resp.json()
-    console.log(tps)
     return tps
   },
 
@@ -24,7 +23,6 @@ export const Struct = {
       body: JSON.stringify({ name })
     })
     const tps = await resp.json()
-    console.log(tps)
     return tps
   },
 
@@ -37,7 +35,6 @@ export const Struct = {
       body: JSON.stringify({ name })
     })
     const tps = await resp.json()
-    console.log(tps)
     return tps
   },
 
@@ -50,7 +47,6 @@ export const Struct = {
       body: JSON.stringify({ name })
     })
     const tps = await resp.json()
-    console.log(tps)
     return tps
   }
 }
@@ -64,12 +60,10 @@ export const Page = {
       body: JSON.stringify({ struct, page })
     })
     const pg = await resp.json()
-    console.log(pg)
     return pg
   },
 
   save: async (page: IPage) => {
-    console.log('save', page)
     const resp = await window.fetch(URL + "/page/save", {
       method: 'POST',
       headers: {
@@ -78,7 +72,6 @@ export const Page = {
       body: JSON.stringify(page)
     })
     const pg = await resp.json()
-    console.log(pg)
     return pg
   }
 }
@@ -91,7 +84,6 @@ export const Index = {
       },
     })
     const pg = await resp.json()
-    console.log('rules',pg)
     return pg as IIndexRule[]
   }
 }

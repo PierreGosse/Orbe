@@ -20,9 +20,15 @@
   let renaming = false;
   let dildo: boolean;
   $: if (content) dildo = !dildo;
-
+  let tryCnt = 0;
   function openPage(evt) {
+    if (dirty && tryCnt++ < 2) {
+      notifications.danger("Page non sauvegardée !");
+      return;
+    }
+    tryCnt = 0;
     if (evt.detail.page) {
+      window.dispatchEvent(new CustomEvent("StructLoading"));
       Page.get(evt.detail.type, evt.detail.page).then((p: IPage) => {
         curPage = p;
         content = p.content
@@ -64,6 +70,7 @@
         initialTitle = curPage.name;
         dirty = false;
         renaming = false;
+        window.dispatchEvent(new CustomEvent("StructLoadStop"));
         notifications.success(evt.detail.type + " " + evt.detail.page);
       });
     } else {
@@ -78,7 +85,8 @@
       content = "";
       dirty = false;
       if (editor) editor.refresh();
-      notifications.success("Nouvelle page "+evt.detail.type);    }
+      notifications.success("Nouvelle page " + evt.detail.type);
+    }
     oldKeys = curPage ? curPage.keys.map((s) => s) : [];
   }
   let dirty = false;
@@ -132,9 +140,7 @@
         dirty = false;
       });
     }
-    notifications.success(
-      curPage.type + " " + curPage.name + " enregistré"
-    );
+    notifications.success(curPage.type + " " + curPage.name + " enregistré");
   }
   function doDelete(id, evt) {
     console.log(id, evt);
