@@ -13,7 +13,7 @@
   export let content: string;
   export const editorEvent = {
     refresh() {
-      //  normalizeEdit();
+      window.setTimeout(normalizeEdit, 100);
     },
   };
   let divrul: HTMLDivElement[] = [];
@@ -23,7 +23,6 @@
   let idSel: string;
 
   $: if (content && divedit) {
-    console.log("editor content");
     window.setTimeout(normalizeEdit, 100);
   }
 
@@ -38,7 +37,6 @@
   });
 
   function rulerHover(e: MouseEvent) {
-    console.log(e.target);
     idSel = (e.target as HTMLElement).attributes.getNamedItem("idx").value;
     eMenu.style.display = "block";
     eMenu.style.top = "" + (e.target as HTMLElement).offsetTop + "px";
@@ -46,7 +44,6 @@
   }
   function menuOff(e: MouseEvent) {
     eMenu.style.display = "none";
-    console.log(idSel);
   }
   function refreshRuler() {
     for (let i = 0; i < divedit.childNodes.length; i++) {
@@ -55,6 +52,7 @@
         divrul[i] = document.createElement("div") as HTMLDivElement;
       const r = divrul[i];
       r.setAttribute("idx", "" + i);
+      r.classList.add("paralab");
       r.onmouseover = rulerHover;
       r.style.position = "absolute";
       r.style.zIndex = "10";
@@ -68,10 +66,8 @@
     while (divrul.length > divedit.childNodes.length) {
       divrul.splice(divrul.length - 1, 1)[0].remove();
     }
-    console.log(divrul)
   }
   function normalizeEdit() {
-    console.log("normalizeEdit");
     const todo: Node[][] = [];
     for (let i = 0; i < divedit.childNodes.length; i++) {
       const c = divedit.childNodes[i];
@@ -96,9 +92,6 @@
         window.getSelection().removeAllRanges();
         var range = document.createRange();
         if (divedit.hasChildNodes()) {
-          console.log(divedit.lastChild);
-          console.log(divedit.lastChild.textContent);
-          console.log(divedit.lastChild.textContent.length);
           let cur = divedit.lastChild;
           while (cur.nodeName != "#text" && cur.lastChild) cur = cur.lastChild;
           range.setStart(cur, cur.textContent.length);
@@ -107,7 +100,6 @@
       }
     }
     for (const td of todo) {
-      console.log(td);
       for (let i = 1; i < td.length; i++) divedit.insertBefore(td[i], td[0]);
       divedit.removeChild(td[0]);
     }
@@ -147,10 +139,21 @@
     range.insertNode(frag);
     normalizeEdit();
   }
-  function stylePara(id, e) {}
+  function stylePara(id, e) {
+    console.log(id, idSel, e);
+    const old = divedit.childNodes[idSel];
+    if (old.tagName != id) {
+      const newTag = document.createElement(id);
+      for (const c of old.childNodes) {
+        newTag.appendChild(c);
+      }
+      divedit.insertBefore(newTag, old);
+      old.remove();
+      normalizeEdit();
+    }
+  }
   function follow(evt) {
     if (divedit && divedit.contains(evt.target) && evt.target.attributes.ref) {
-      console.log(evt.target.attributes.ref.value);
       const vv = evt.target.attributes.ref.value.split("|");
       const ll = vv[0].split("/");
       if (ll.length == 2)
@@ -170,13 +173,13 @@
     bind:this={divedit}
   />
   <div id="editormenu" on:mouseleave={menuOff} bind:this={eMenu}>
-    <Btn txt="H1" id="h1" action={stylePara} />
-    <Btn txt="H2" id="h2" action={stylePara} />
-    <Btn txt="H3" id="h3" action={stylePara} />
-    <Btn txt="H4" id="h4" action={stylePara} />
-    <Btn txt="H5" id="h5" action={stylePara} />
-    <Btn txt="H6" id="h6" action={stylePara} />
-    <Btn txt="P" id="p" action={stylePara} />
+    <Btn txt="H1" cls="btneditor" id="h1" action={stylePara} />
+    <Btn txt="H2" cls="btneditor" id="h2" action={stylePara} />
+    <Btn txt="H3" cls="btneditor" id="h3" action={stylePara} />
+    <Btn txt="H4" cls="btneditor" id="h4" action={stylePara} />
+    <Btn txt="H5" cls="btneditor" id="h5" action={stylePara} />
+    <Btn txt="H6" cls="btneditor" id="h6" action={stylePara} />
+    <Btn txt="P" cls="btneditor" id="p" action={stylePara} />
   </div>
 </div>
 
@@ -187,17 +190,37 @@
     display: none;
     background-color: rgb(172, 172, 172);
     border: 1px solid rgb(49, 49, 49);
+    border-radius: 5px;
     padding: 3px;
+    margin: -2px;
   }
   [contenteditable] {
     width: 100%;
     border: 1px solid lightblue;
     padding: 5px;
   }
-  :global(h1 h2 h3 h4 h5 h6){
+  :global(h1 h2 h3 h4 h5 h6) {
     margin: 5px 2px 5px 2px;
   }
   :global(p) {
     margin: 2px;
+  }
+  :global(b) {
+    color: darkblue;
+  }
+  :global(.paralab) {
+    background-color: rgb(240, 240, 240);
+    color: #aaa;
+    font-size: 12px;
+    border: 1px solid rgb(100, 100, 100);
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    width: 17px;
+    padding: 1px;
+  }
+  :global(.btneditor) {
+  }
+  :global(.btneditor:hover) {
+    color: white;
   }
 </style>

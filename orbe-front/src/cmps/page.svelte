@@ -3,23 +3,23 @@
   import { IPage, IPara, KEYINDEXREG } from "orbe-common";
   import { Page } from "../srv/files";
   import Btn from "./btn.svelte";
-  import ok from "../imgs/ok.svg";
-  import cancel from "../imgs/cancel.svg";
   import save from "../imgs/save.svg";
   import delbin from "../imgs/delete.svg";
   import edit from "../imgs/edit.svg";
   import { INDEX } from "../helpers/keyIndex";
   import Editor from "./Editor.svelte";
+  import { notifications } from "../helpers/notifications";
+  import CmpKey from "./cmpKey.svelte";
+  import Keywords from "./Keywords.svelte";
 
   let editor: any;
-  let editKeys = false;
   let oldKeys: string[];
   let curPage: IPage | undefined;
   let initialTitle: string;
   let content: string = "";
   let renaming = false;
-
-  $: if(content) console.log('page content')
+  let dildo: boolean;
+  $: if (content) dildo = !dildo;
 
   function openPage(evt) {
     if (evt.detail.page) {
@@ -55,7 +55,6 @@
               })
               .map((s) => {
                 return s.replaceAll(/http\S+/g, (match) => {
-                  console.log(match);
                   return `<a href="${match}">${match}</a>`;
                 });
               })
@@ -64,6 +63,8 @@
           .join("\n");
         initialTitle = curPage.name;
         dirty = false;
+        renaming = false;
+        notifications.success(evt.detail.type + " " + evt.detail.page);
       });
     } else {
       curPage = {
@@ -73,9 +74,11 @@
         content: [],
       };
       initialTitle = "";
+      renaming = true;
       content = "";
       dirty = false;
-    }
+      if (editor) editor.refresh();
+      notifications.success("Nouvelle page "+evt.detail.type);    }
     oldKeys = curPage ? curPage.keys.map((s) => s) : [];
   }
   let dirty = false;
@@ -117,6 +120,7 @@
         };
       });
     curPage.content = paras;
+    renaming = false;
     INDEX.replace(
       curPage.type + "/" + curPage.name,
       oldKeys.map((k) => k.split(" ")),
@@ -126,60 +130,19 @@
     if (curPage.name) {
       Page.save(curPage).then(() => {
         dirty = false;
-        console.log(id, evt);
       });
     }
+    notifications.success(
+      evt.detail.struct + " " + evt.detail.name + " enregistré"
+    );
   }
   function doDelete(id, evt) {
     console.log(id, evt);
   }
-  let edKeys;
-  function modKeys() {
-    editKeys = true;
-    edKeys = curPage.keys
-      .map((k) => {
-        return `<p>${k}</p>`;
-      })
-      .join("");
-  }
-  function cancelKeys() {
-    editKeys = false;
-  }
-  function okKeys() {
-    editKeys = false;
-    dirty = true;
-    const kk = edKeys
-      ? edKeys
-          .replaceAll("\n", "")
-          .replaceAll(/\<br\/?\>/gi, "")
-          .match(
-            /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/gi
-          )
-          .map((l) => {
-            console.log("1", l);
-            const m = l.match(
-              /(?<precont>[^\>\<]*)\<(?<tag>\w+)\>(?<content>[^\>\<]*)\<\/\k<tag>\>/i
-            );
-            return (m.groups.precont ? m.groups.precont : "") + m.groups.content
-              ? m.groups.content
-              : "";
-          })
-          .map((l) => {
-            console.log("2", l);
-            let m;
-            let resp = [];
-            while ((m = KEYINDEXREG.exec(l)) != null) {
-              console.log(m);
-              if (m.groups.ok) resp.push(m[0]);
-            }
-            return resp.join(" ");
-          })
-      : [];
-    curPage.keys = kk.filter((d) => d > "");
-  }
 </script>
 
 <div class="main">
+  <CmpKey ctrl key="s" action={doSave} />
   {#if curPage}
     {#if renaming || !curPage.name}
       <input
@@ -195,24 +158,7 @@
     {/if}
     <Btn action={doDelete} img={delbin} cls="btnsvg cmd" />
     <br />
-    <div id="keys">
-      mots clés
-      {#if editKeys}
-        <div contenteditable="true" bind:innerHTML={edKeys}>
-          {#each curPage.keys as k}
-            <p>{k}</p>
-          {/each}
-        </div>
-        &nbsp;
-        <span class="cmd">
-          <Btn action={cancelKeys} img={cancel} cls="btnsvg" />
-          <Btn action={okKeys} img={ok} cls="btnsvg" />
-        </span>
-      {:else}
-        <span>{curPage.keys.join(", ")}</span>
-        <Btn action={modKeys} img={edit} cls="btnsvg cmd" />
-      {/if}
-    </div>
+    <Keywords bind:keys={curPage.keys} bind:dirty />
     <br />
     <Editor bind:editorEvent={editor} bind:content bind:dirty />
     <div id="foot">
@@ -224,9 +170,9 @@
 </div>
 
 <style>
-  #keys {
+  /*#keys {
     width: 80%;
-  }
+  }*/
   #foot {
     min-height: 30px;
   }

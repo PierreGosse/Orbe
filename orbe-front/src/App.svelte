@@ -1,6 +1,7 @@
 <script>
   import Struct from "./cmps/struct.svelte";
   import Page from "./cmps/page.svelte";
+  import Toast from "./cmps/toast.svelte";
   import { onMount } from "svelte";
   import { INDEX } from "./helpers/keyIndex";
   import { Index } from "./srv/files";
@@ -11,7 +12,7 @@
   onMount(() => {
     Index.getRules().then((rules) => {
       INDEX.load(rules);
-      console.log(INDEX.getIndex())
+      console.log(INDEX.getIndex());
     });
   });
 </script>
@@ -19,6 +20,7 @@
 <main>
   <div id="struct"><Struct /></div>
   <div id="page"><Page /></div>
+  <Toast />
 </main>
 
 <style>
@@ -54,7 +56,7 @@
     fill: rgb(255, 195, 128);
     stroke: rgb(255, 195, 128);
   }
-  :global(.lnk){
-    cursor:pointer
+  :global(.lnk) {
+    cursor: pointer;
   }
 </style>
