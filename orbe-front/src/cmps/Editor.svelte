@@ -149,6 +149,7 @@
       }
       divedit.insertBefore(newTag, old);
       old.remove();
+      dirty=true;
       normalizeEdit();
     }
   }
