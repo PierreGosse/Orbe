@@ -100,7 +100,7 @@
     window.removeEventListener("openPage", openPage);
   });
 
-  function doSave(id, evt) {
+  function doSave() {
     const paras = content
       .replaceAll("\n", "")
       .replaceAll(/\<br\/?\>/gi, "\n")
@@ -133,7 +133,7 @@
       });
     }
     notifications.success(
-      evt.detail.struct + " " + evt.detail.name + " enregistré"
+      curPage.type + " " + curPage.name + " enregistré"
     );
   }
   function doDelete(id, evt) {
