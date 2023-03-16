@@ -219,6 +219,7 @@
     padding: 1px;
   }
   :global(.btneditor) {
+    color: black;
   }
   :global(.btneditor:hover) {
     color: white;

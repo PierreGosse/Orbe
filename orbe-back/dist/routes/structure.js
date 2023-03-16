@@ -8,6 +8,5 @@ const express_1 = __importDefault(require("express"));
 const files_1 = require("../srv/files");
 exports.Struct = express_1.default.Router();
 exports.Struct.get('/', (req, res) => {
-    console.log('getstruct');
     res.send(files_1.Files.getInstance().getStruct());
 });

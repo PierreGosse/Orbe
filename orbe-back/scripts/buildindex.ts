@@ -11,12 +11,9 @@ for (const struct of fls.getStruct().types) {
   for (const name of fls.listPages(struct)) {
     const page = fls.getPage(struct, name)
     const ks = page.keys.filter(k => k > "")
-    console.log(ks)
     for(const k of ks)
-      index.loadRule({ link: struct + "/" + name, keys: k.split(' ') })
+      index.loadRule({ link: [struct + "/" + name], keys: k.split(' ') })
   }
 }
-console.log(JSON.stringify(index,null,2))
 const ser = index.serialize()
-console.log(ser)
 fls.writeRules(ser)
